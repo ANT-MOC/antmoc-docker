@@ -1,8 +1,5 @@
-ARG SPACK_VERSION="0.21.2"
-ARG SPACK_IMAGE="spack/ubuntu-jammy"
-FROM ${SPACK_IMAGE}:${SPACK_VERSION}
-ARG UBUNTU_CODE
-ENV UBUNTU_CODE=${UBUNTU_CODE:-"jammy"}
+ARG SPACK_IMAGE="spack/ubuntu-jammy:0.21.2"
+FROM ${SPACK_IMAGE}
 
 LABEL maintainer="An Wang <wangan.cs@gmail.com>"
 
@@ -12,6 +9,7 @@ WORKDIR /root
 #-------------------------------------------------------------------------------
 # Install system compilers and libraries
 #-------------------------------------------------------------------------------
+ARG UBUNTU_CODE="jammy"
 ADD etc/apt/ /etc/apt/
 RUN <<EOF bash # install cmake, openssh, etc.
 set -e
@@ -72,9 +70,9 @@ EOF
 #-------------------------------------------------------------------------------
 # Install dependencies for antmoc
 #-------------------------------------------------------------------------------
-# To avoid the default --reuse option of spack 0.21,
-# add %clang or %gcc for every MPI spec in spack.yaml.
-ADD spack.yaml ${ENV_DIR}/
+ARG BUILD_TYPE=serial
+
+ADD spack.${BUILD_TYPE}.yaml ${ENV_DIR}/spack.yaml
 RUN <<EOF bash # create a spack environment
 set -e
 cd ${ENV_DIR} && spack env activate .
@@ -97,12 +95,13 @@ RUN find -L "${INSTALL_DIR}" -type f -exec readlink -f '{}' \; | \
 #-------------------------------------------------------------------------------
 ADD ant-moc/ /opt/ant-moc
 RUN <<EOF bash # installing antmoc
+PRESET=gcc-${BUILD_TYPE}-release
+BUILD_DIR=build/\$PRESET
+
 spack env activate -d ${ENV_DIR}
 spack load cmake%gcc antmoc
 
 cp -r /opt/ant-moc ./ant-moc && cd ./ant-moc
-PRESET=gcc-serial-release
-BUILD_DIR=build/\$PRESET
 [ -d \$BUILD_DIR ] && rm -rf \$BUILD_DIR
 
 cmake --preset \$PRESET -DENABLE_TESTS=ON
@@ -111,13 +110,17 @@ ctest --test-dir \$BUILD_DIR --output-on-failure --stop-on-failure
 cmake --install \$BUILD_DIR
 ldd \$(which antmoc)
 antmoc --help
+
+[ ${BUILD_TYPE} == "mpi" ] && ln -s \$(which mpirun) /usr/bin/mpirun
 EOF
+
+ENV OMPI_ALLOW_RUN_AS_ROOT=1 OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1
 
 #-------------------------------------------------------------------------------
 # Reset the entrypoint or CMD
 #-------------------------------------------------------------------------------
 ENTRYPOINT ["/bin/bash", "-l", "-c", "$*", "--"]
-CMD ["antmoc"]
+CMD []
 
 #-----------------------------------------------------------------------
 # OCI annotations

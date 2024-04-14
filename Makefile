@@ -1,18 +1,12 @@
 #===============================================================================
 # Default User Options
 #===============================================================================
+UBUNTU_CODE ?= jammy
+SPACK_IMAGE  = spack/ubuntu-$(UBUNTU_CODE):0.21.2
 
-# Build-time arguments
-UBUNTU_CODE    ?= jammy
-SPACK_VERSION  ?= 0.21.2
-SPACK_IMAGE     = spack/ubuntu-$(UBUNTU_CODE)
-
-# Target
-TARGET ?= x86_64
-
-# Image name
+BUILD_TYPE   ?= mpi # or mpi
 DOCKER_IMAGE ?= antmoc/antmoc
-DOCKER_TAG   := dev-alpha
+DOCKER_TAG   := 0.1.15-mpi
 
 #===============================================================================
 # Variables and objects
@@ -39,11 +33,22 @@ build:
                  --build-arg UBUNTU_CODE=$(UBUNTU_CODE) \
                  --build-arg SPACK_VERSION=$(SPACK_VERSION) \
                  --build-arg SPACK_IMAGE=$(SPACK_IMAGE) \
-                 --build-arg TARGET=$(TARGET) \
+                 --build-arg BUILD_TYPE=$(BUILD_TYPE) \
                  --build-arg OCI_CREATED=$(OCI_CREATED) \
                  --build-arg OCI_SOURCE=$(OCI_SOURCE) \
                  --build-arg OCI_REVISION=$(GIT_COMMIT) \
-                 -t $(DOCKER_IMAGE):$(DOCKER_TAG) .
+                 -t $(DOCKER_IMAGE):$(DOCKER_TAG)-alpha .
+
+	slim build \
+                --mount ant-moc:/opt/mnt/ant-moc \
+                --http-probe=false \
+                --show-clogs \
+                --include-path /opt/software \
+                --include-shell \
+                --include-exe-file slim/include-exe.$(BUILD_TYPE) \
+                --target $(DOCKER_IMAGE):$(DOCKER_TAG)-alpha \
+                --tag $(DOCKER_IMAGE):$(DOCKER_TAG) \
+                --exec antmoc
 
 push:
 	# Push to DockerHub
