@@ -34,25 +34,23 @@ class Antmoc(CMakePackage):
     depends_on("hdf5@1.10:1.14 +mpi+shared", when="+mpi")
     depends_on("googletest@1.10.0: +gmock+pthreads+shared")
 
+    def url_for_version(self, version):
+        if version < Version("0.1.15"):
+            return f"https://gitlab.com/HPCer/neutronics/ant-moc/-/archive/v{version}/ant-moc-v{version}.tar.gz"
+        return f"https://gitlab.com/HPCer/neutronics/ant-moc/-/archive/{version}/ant-moc-{version}.tar.gz"
 
-def url_for_version(self, version):
-    if version < Version("0.1.15"):
-        return f"https://gitlab.com/HPCer/neutronics/ant-moc/-/archive/v{version}/ant-moc-v{version}.tar.gz"
-    return f"https://gitlab.com/HPCer/neutronics/ant-moc/-/archive/{version}/ant-moc-{version}.tar.gz"
+    def cmake_args(self):
+        spec = self.spec
+        args = [
+            self.define('USE_INTERNAL_ALL', False),
+            self.define('ENABLE_DEBUG', False),
+            self.define('ENABLE_TESTS', False),
+            self.define('ENABLE_COVERAGE', False),
+            self.define('ENABLE_DOUBLE_PRECISION', True),
+            self.define_from_variant('BUILD_SHARED_LIBS', 'shared'),
+            self.define_from_variant('ENABLE_CYCLIC', 'cyclic'),
+            self.define_from_variant('ENABLE_CMFD', 'cmfd'),
+            self.define_from_variant('ENABLE_MPI', 'mpi'),
+        ]
 
-
-def cmake_args(self):
-    spec = self.spec
-    args = [
-        self.define('USE_INTERNAL_ALL', False),
-        self.define('ENABLE_DEBUG', False),
-        self.define('ENABLE_TESTS', False),
-        self.define('ENABLE_COVERAGE', False),
-        self.define('ENABLE_DOUBLE_PRECISION', True),
-        self.define_from_variant('BUILD_SHARED_LIBS', 'shared'),
-        self.define_from_variant('ENABLE_CYCLIC', 'cyclic'),
-        self.define_from_variant('ENABLE_CMFD', 'cmfd'),
-        self.define_from_variant('USE_MPI', 'mpi'),
-    ]
-
-    return args
+        return args

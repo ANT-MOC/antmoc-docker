@@ -4,7 +4,7 @@
 UBUNTU_CODE ?= jammy
 SPACK_IMAGE  = spack/ubuntu-$(UBUNTU_CODE):0.21.2
 
-BUILD_TYPE   ?= mpi # or mpi
+BUILD_TYPE   ?= mpi # serial or mpi
 DOCKER_IMAGE ?= antmoc/antmoc
 DOCKER_TAG   := 0.1.15-mpi
 
@@ -40,7 +40,6 @@ build:
                  -t $(DOCKER_IMAGE):$(DOCKER_TAG)-alpha .
 
 	slim build \
-                --mount ant-moc:/opt/mnt/ant-moc \
                 --http-probe=false \
                 --show-clogs \
                 --include-path /opt/software \

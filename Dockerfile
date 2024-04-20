@@ -68,7 +68,7 @@ spack external find --scope system --not-buildable \
 EOF
 
 #-------------------------------------------------------------------------------
-# Install dependencies for antmoc
+# Install antmoc
 #-------------------------------------------------------------------------------
 ARG BUILD_TYPE=serial
 
@@ -79,7 +79,13 @@ cd ${ENV_DIR} && spack env activate .
 spack install -j \$(nproc) --fail-fast -ny
 spack gc -y && spack clean -a
 spack debug report
-spack find -v # Check spack and dependency installation
+
+# create links
+spack load antmoc
+ln -s \$(which antmoc) /usr/bin/antmoc
+if [ ${BUILD_TYPE} == "mpi" ]; then
+  ln -s \$(which mpirun) /usr/bin/mpirun
+fi
 EOF
 
 # Strip all the binaries
@@ -89,30 +95,6 @@ RUN find -L "${INSTALL_DIR}" -type f -exec readlink -f '{}' \; | \
   grep 'x-executable\|x-archive\|x-sharedlib' | \
   awk -F: '{print $1}' | \
   xargs strip -s
-
-#-------------------------------------------------------------------------------
-# Install antmoc
-#-------------------------------------------------------------------------------
-ADD ant-moc/ /opt/ant-moc
-RUN <<EOF bash # installing antmoc
-PRESET=gcc-${BUILD_TYPE}-release
-BUILD_DIR=build/\$PRESET
-
-spack env activate -d ${ENV_DIR}
-spack load cmake%gcc antmoc
-
-cp -r /opt/ant-moc ./ant-moc && cd ./ant-moc
-[ -d \$BUILD_DIR ] && rm -rf \$BUILD_DIR
-
-cmake --preset \$PRESET -DENABLE_TESTS=ON
-cmake --build \$BUILD_DIR -j \$(nproc)
-ctest --test-dir \$BUILD_DIR --output-on-failure --stop-on-failure
-cmake --install \$BUILD_DIR
-ldd \$(which antmoc)
-antmoc --help
-
-[ ${BUILD_TYPE} == "mpi" ] && ln -s \$(which mpirun) /usr/bin/mpirun
-EOF
 
 ENV OMPI_ALLOW_RUN_AS_ROOT=1 OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1
 
