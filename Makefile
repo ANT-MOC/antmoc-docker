@@ -4,9 +4,9 @@
 UBUNTU_CODE ?= jammy
 SPACK_IMAGE  = spack/ubuntu-$(UBUNTU_CODE):0.21.2
 
-BUILD_TYPE   ?= mpi # serial or mpi
+BUILD_TYPE   ?= serial # serial or mpi
 DOCKER_IMAGE ?= antmoc/antmoc
-DOCKER_TAG   := 0.1.15-mpi
+DOCKER_TAG   := 0.1.16
 
 #===============================================================================
 # Variables and objects

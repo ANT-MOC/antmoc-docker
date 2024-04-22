@@ -12,6 +12,7 @@ class Antmoc(CMakePackage):
 
     license("MIT")
 
+    version("0.1.16", sha256='b5f40679137dbe10e0f3169b63a637e73c7e326c966324604947e301898fde6b')
     version("0.1.15", sha256='2a40fdd7803f72eaad1b5fd10c7c701f1e89763a215d1cf1df3fbd76093ac66a')
 
     variant('cmfd', default=False, description='Enable CMFD acceleration')
@@ -32,7 +33,7 @@ class Antmoc(CMakePackage):
     depends_on("toml11@3.6:3.7")
     depends_on("hdf5@1.10:1.14 ~mpi+shared", when="~mpi")
     depends_on("hdf5@1.10:1.14 +mpi+shared", when="+mpi")
-    depends_on("googletest@1.10.0: +gmock+pthreads+shared")
+    # depends_on("googletest@1.10.0: +gmock+pthreads+shared")
 
     def url_for_version(self, version):
         if version < Version("0.1.15"):
